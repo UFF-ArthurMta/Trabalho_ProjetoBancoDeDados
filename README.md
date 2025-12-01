@@ -6,8 +6,9 @@
 
 **Integrantes:**
 - Gabriel Vieira
-- Arthur Mota Danillo
-- Cyrilo Pedro Piaes
+- Arthur Mota
+- Danillo Cyrilo
+- Pedro Piaes
 - Matheus Andrade
 
 ---
