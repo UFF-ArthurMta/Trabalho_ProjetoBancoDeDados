@@ -87,6 +87,35 @@ CREATE TRIGGER trg_auditar_nick
 BEFORE UPDATE ON trabalho_bd2.Usuario
 FOR EACH ROW EXECUTE FUNCTION trabalho_bd2.auditar_mudanca_nick ();
 
+-- Converter Moeda de Doação para Valor Base
+CREATE OR REPLACE FUNCTION trabalho_bd2.converter_moeda_doacao()
+RETURNS TRIGGER AS $$
+DECLARE
+    moeda_origem VARCHAR(10);
+    taxa NUMERIC(15,6);
+BEGIN
+    -- Busca a moeda do pais do usuario
+    SELECT p.moeda INTO moeda_origem
+    FROM trabalho_bd2.Usuario u
+    JOIN trabalho_bd2.Pais p ON u.pais_residencia = p.DDI
+    WHERE u.nick = NEW.nick_usuario;
+
+    -- Busca a taxa de conversao para dolar (ou base) — default 1
+    SELECT COALESCE(fator_conver, 1) INTO taxa
+    FROM trabalho_bd2.Conversao
+    WHERE moeda = moeda_origem;
+
+    -- Preenche valor_convertido (assume coluna existe na tabela Doacao)
+    NEW.valor_convertido := NEW.valor * taxa;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_converter_moeda_doacao
+BEFORE INSERT OR UPDATE ON trabalho_bd2.Doacao
+FOR EACH ROW EXECUTE FUNCTION trabalho_bd2.converter_moeda_doacao();
+''
 -- Remove Inscrições de Canais que se tornaram "Privados"
 
 CREATE OR REPLACE FUNCTION trabalho_bd2.gerir_canal_privado()
